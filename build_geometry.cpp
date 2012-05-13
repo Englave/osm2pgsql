@@ -475,26 +475,42 @@ size_t build_geometry(osmid_t osm_id, struct osmNode **xnodes, int *xcount, int 
             if ((toplevelpolygons > 1) && enable_multi)
             {
                 std::auto_ptr<MultiPolygon> multipoly(gf.createMultiPolygon(polygons.release()));
-                //if (multipoly->isValid())
-                //{
+                if (multipoly->isValid())
+                {
                     std::string text = writer.write(multipoly.get());
                     wkts.push_back(text);
                     areas.push_back(multipoly->getArea());
                     wkt_size++;
-                //}
+                }
+		else
+		{
+		    Geometry * geom_tl = (multipoly->clone())->buffer(0);
+		    std::string text = writer.write(geom_tl);
+                    wkts.push_back(text);
+                    areas.push_back(geom_tl->getArea());
+                    wkt_size++;
+		}
             }
             else
             {
                 for(unsigned i=0; i<toplevelpolygons; i++) 
                 {
-                    Polygon* poly = dynamic_cast<Polygon*>(polygons->at(i));;
-                    //if (poly->isValid())
-                    //{
+                    Polygon* poly = dynamic_cast<Polygon*>(polygons->at(i));
+                    if (poly->isValid())
+                    {
                         std::string text = writer.write(poly);
                         wkts.push_back(text);
                         areas.push_back(poly->getArea());
                         wkt_size++;
-                    //}
+                    }
+		    else
+		    {
+		    	Geometry * geom_tl = (poly->clone())->buffer(0);
+		    	std::string text = writer.write(geom_tl);
+                    	wkts.push_back(text);
+                    	areas.push_back(geom_tl->getArea());
+                    	wkt_size++;
+		    }
                     delete(poly);
                 }
             }
